@@ -1,0 +1,2 @@
+export VAULT_TOKEN = 's.riAiCB7QRiVgmRfTE4wl8VJM'
+export VAULT_URL = 'http://localhost:8200'
