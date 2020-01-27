@@ -1,2 +1,2 @@
-VAULT_TOKEN = 's.riAiCB7QRiVgmRfTE4wl8VJM'
-VAULT_URL = 'http://localhost:8200'
+VAULT_TOKEN='s.riAiCB7QRiVgmRfTE4wl8VJM'
+VAULT_URL='http://localhost:8200'
