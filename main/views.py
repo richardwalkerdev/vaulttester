@@ -102,6 +102,7 @@ def aws(request):
         # Assign variables for API response 
         aws_gen_access_key_value = gen_creds_response['data']['access_key']
         aws_gen_secret_key = gen_creds_response['data']['secret_key']
+ 
     except:
         print("Error: Failed to generate AWS credentials.")
         return Response("Error: Failed to generate AWS credentials.")  
