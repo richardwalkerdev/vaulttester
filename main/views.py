@@ -197,7 +197,7 @@ def ocp(request):
 
     # client = hvac.Client(url=os.environ['VAULT_URL'], token=os.environ['VAULT_TOKEN'])
 
-    try:
+ #   try:
         # OpenShift (from pod)
         f = open('/var/run/secrets/kubernetes.io/serviceaccount/token')
         jwt = f.read()
@@ -205,10 +205,11 @@ def ocp(request):
 
         # Test authentication
         auth_bool = client.is_authenticated()
-        print("Connected OK. Authenticated:", auth_bool)
-    except:
-        print("Error: Failed to connect and/or authenticate.")
-        return Response("Error: Failed to connect and/or authenticate.")
+        #print("Connected OK. Authenticated:", auth_bool)
+        print("Authenticated?", auth_bool)
+    # except:
+    #     print("Error: Failed to connect and/or authenticate.")
+    #     return Response("Error: Failed to connect and/or authenticate.")
 
     # Generate AWS credentials
     try:
