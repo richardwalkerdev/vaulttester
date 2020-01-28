@@ -199,14 +199,14 @@ def ocp(request):
 
  #   try:
         # OpenShift (from pod)
-        f = open('/var/run/secrets/kubernetes.io/serviceaccount/token')
-        jwt = f.read()
-        client.auth_kubernetes(aws-example, jwt)
+    f = open('/var/run/secrets/kubernetes.io/serviceaccount/token')
+    jwt = f.read()
+    client.auth_kubernetes(aws-example, jwt)
 
-        # Test authentication
-        auth_bool = client.is_authenticated()
-        #print("Connected OK. Authenticated:", auth_bool)
-        print("Authenticated?", auth_bool)
+    # Test authentication
+    auth_bool = client.is_authenticated()
+    #print("Connected OK. Authenticated:", auth_bool)
+    print("Authenticated?", auth_bool)
     # except:
     #     print("Error: Failed to connect and/or authenticate.")
     #     return Response("Error: Failed to connect and/or authenticate.")
