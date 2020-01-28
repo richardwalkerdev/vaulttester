@@ -176,6 +176,15 @@ def ec2(request):
 @api_view(['GET'])
 def ocp(request):
    
+    def get_env_value(env_variable):
+        try:
+            return os.environ[env_variable]
+        except KeyError:
+            error_msg = 'Set the {} environment variable'.format(env_variable)
+            raise ImproperlyConfigured(error_msg)
+
+
+
     VAULT_URL = get_env_value('VAULT_URL')
 
 
