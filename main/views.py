@@ -203,7 +203,7 @@ def ocp(request):
     jwt = f.read()
     client = hvac.Client()
     client = hvac.Client(url=os.environ['VAULT_URL'])
-    client.auth_kubernetes(aws-example, jwt)
+    client.auth_kubernetes("aws-example", jwt)
 
     # Test authentication
     auth_bool = client.is_authenticated()
