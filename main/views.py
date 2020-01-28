@@ -201,6 +201,8 @@ def ocp(request):
         # OpenShift (from pod)
     f = open('/var/run/secrets/kubernetes.io/serviceaccount/token')
     jwt = f.read()
+    client = hvac.Client()
+    client = hvac.Client(url=os.environ['VAULT_URL'])
     client.auth_kubernetes(aws-example, jwt)
 
     # Test authentication
