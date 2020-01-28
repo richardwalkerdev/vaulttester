@@ -183,35 +183,28 @@ def ocp(request):
             error_msg = 'Set the {} environment variable'.format(env_variable)
             raise ImproperlyConfigured(error_msg)
 
-
-
     VAULT_URL = get_env_value('VAULT_URL')
 
-
-    # f = open('/var/run/secrets/kubernetes.io/serviceaccount/token')
-    # jwt = f.read()
-    # client = hvac.Client()
-    # client = hvac.Client(url='https://vault.mydomain.internal')
-    # client.auth_kubernetes("default", jwt)
-    # print(client.read('secret/pippo/pluto'))
-
-    # client = hvac.Client(url=os.environ['VAULT_URL'], token=os.environ['VAULT_TOKEN'])
-
- #   try:
+    try:
         # OpenShift (from pod)
-    f = open('/var/run/secrets/kubernetes.io/serviceaccount/token')
-    jwt = f.read()
-    client = hvac.Client()
-    client = hvac.Client(url=os.environ['VAULT_URL'])
-    client.auth_kubernetes("aws-example", jwt)
+        f = open('/var/run/secrets/kubernetes.io/serviceaccount/token')
+        jwt = f.read()
+        client = hvac.Client()
+        client = hvac.Client(url=os.environ['VAULT_URL'])
+        client.auth_kubernetes("aws-example", jwt)
 
-    # Test authentication
-    auth_bool = client.is_authenticated()
-    #print("Connected OK. Authenticated:", auth_bool)
-    print("Authenticated?", auth_bool)
-    # except:
-    #     print("Error: Failed to connect and/or authenticate.")
-    #     return Response("Error: Failed to connect and/or authenticate.")
+        # Print VAULT_URL & jwt to console
+        print("VAULT_URL: ", VAULT_URL)
+        print("jwt: ", jwt)
+
+        # Test authentication
+        auth_bool = client.is_authenticated()
+        #print("Connected OK. Authenticated:", auth_bool)
+        print("Connected OK. Authenticated:", auth_bool)
+
+    except:
+        print("Error: Failed to connect and/or authenticate.")
+        return Response("Error: Failed to connect and/or authenticate.")
 
     # Generate AWS credentials
     try:
