@@ -5,7 +5,7 @@ This guide explores getting HashiCorp Vault running in AWS using Podman, enablin
 
 Here is a high-level architecture diagram of the following exercises: 
 
-![Architecture](/images/misc/vault-1.png)
+![Architecture](/img/misc/vault-1.png)
 
 Take note that there are three VPC in the equation. VPC peering is required for the OpenShift cluster to access Vault using private addresses. In simple terms the numbers in green circles depict:
 
@@ -25,7 +25,7 @@ The steps to provision and install the management EC2 instance in its VPC and de
 
 After completing _that_ guide, you should have the core of the target architecture:
 
-![Architecture](/images/misc/vault-2.png)
+![Architecture](/img/misc/vault-2.png)
 
 
 ### Deploy HashiCorp Vault
@@ -457,7 +457,7 @@ Sample output:
 
 If you look in your AWS Web console under IAM, you'll see the new credentials appearing:
 
-![Users](/images/misc/vault-users.png)
+![Users](/img/misc/vault-users.png)
 
 ### Final Smoke test
 
