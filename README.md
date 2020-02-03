@@ -1,27 +1,32 @@
 
 ## Introduction 
 
-This guide explores getting HashiCorp Vault running in AWS using Podman, enabling the dynamic "AWS Secrets Engine" feature and using a simple testing application built with Django REST framework. Moving onto deploying the same application onto an OpenShift Container platform and finally, OpenShift exploits Vaults "Kubernetes Auth Method" to authenticate to Vault to retrieve AWS credentials.  
+This guide explores a number of areas:
+* getting HashiCorp Vault running in AWS using Podman
+* enabling the dynamic "AWS Secrets Engine" feature 
+* using a simple test application built with the Django REST framework
+* deploying the application onto an OpenShift Container platform cluster
+* Showing how OpenShift exploits Vaults "Kubernetes Auth Method" to authenticate to Vault to retrieve AWS credentials.  
 
 Here is a high-level architecture diagram of the following exercises: 
 
 ![Architecture](/img/misc/vault-1.png)
 
-Take note that there are three VPC in the equation. VPC peering is required for the OpenShift cluster to access Vault using private addresses. In simple terms the numbers in green circles depict:
+Take note that there are three VPCs in the equation. VPC peering is required for the OpenShift cluster to access Vault using private addresses. In simple terms the numbers in green circles depict:
 
 1. application authenticates with Vault using Kubernetes auth method
-2. application requests to generate AWS credential
-3. AWS credential returned to the application
-4. application uses AWS credential to do stuff with permitted AWS resources
+2. application requests the generation of AWS credentials
+3. AWS credentials returned to the application
+4. application uses AWS credentials to make requests to permitted AWS resources
 
 ### Prerequisites
 
-This guide uses Amazon Web Servers (AWS) to deploy an OpenShift 4 cluster and two RHEL 8 EC2 instances. One instance in its VPC is the management host, the second instance in its VPC hots HashiCorp Vault, external to the OpenShift cluster, also deployed into its dedicated VPC.
+This guide uses Amazon Web Services (AWS) to deploy an OpenShift 4 cluster and two RHEL 8 EC2 instances. One EC2 instance is in a VPC as a management host, the second one hosts HashiCorp Vault, external to the OpenShift cluster, which is also deployed into a dedicated VPC.
 
 
 ### Management EC2 instance & OpenShift 4 Cluster
 
-The steps to provision and install the management EC2 instance in its VPC and deploy the OpenSHift 4 Cluster are detailed here: https://www.richardwalker.dev/guides/aws_openshift4/
+The steps to provision and install the management EC2 instance in its VPC and deploy the OpenShift 4 Cluster are detailed here: https://www.richardwalker.dev/guides/aws_openshift4/
 
 After completing _that_ guide, you should have the core of the target architecture:
 
@@ -94,7 +99,7 @@ If needed, create a new key-pair:
 aws ec2 create-key-pair --key-name vaultkey --query 'KeyMaterial' --output text > vaultkey.pem
 ```
 
-If obtainer from the web console, copy and paste the RSA PRIVATE KEY into a file. Either way, apply the correct file permissions to the file:
+If obtained from the web console, copy and paste the RSA PRIVATE KEY into a file. Either way, apply the correct file permissions to the file:
 
 ``` bash
 chmod 600 mgmtkey.pem
@@ -130,7 +135,7 @@ After a couple of minutes get the public IP address for the new EC2 instance:
 aws ec2 describe-instances --instance-ids i-0666c0f60b87a0bbc
 ```
 
-And SSH to the new instance:
+Add SSH to the new instance:
 
 ``` bash
 ssh -i vaultkey.pem ec2-user@35.178.14.74
@@ -152,13 +157,13 @@ Pull the vault image from `docker.io`:
 podman pull vault
 ```
 
-View the image is now available locally:
+See that the image is now available locally:
 
 ``` bash
 podman images
 ```
 
-Now run a container using that image using the default port:
+Run a container using that image using the default port:
 
 ``` bash
 podman run -d --cap-add=IPC_LOCK -p 8200:8200 -e 'VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200' vault
@@ -170,7 +175,7 @@ Check the container is running:
 podman ps
 ```
 
-You'll need to obtain and make a note of the unseal key, root token and the suggested `export` environment variable for `VAULT_ADDR`. View the beginning of the logs from the running container to obtain this information. Use `podman ps` to obtain the container ID, for example:
+You'll need to obtain and make a note of the unseal key, root token, and the suggested `export` environment variable for `VAULT_ADDR`. View the beginning of the logs from the running container to obtain this information. Use `podman ps` to obtain the container ID:
 
 ```
 podman logs eb1564fc266a
@@ -184,7 +189,7 @@ Unseal Key: 0w2SdqlY1u3I1mV28FWZxmE3UXlCW9HsOOl0wdi7myg=
 Root Token: s.riAiCB7QRiVgmRfTE4wl8VJM
 ```
 
-Do the export:
+Complete the export:
 
 ``` bash
 export VAULT_ADDR='http://0.0.0.0:8200'
@@ -192,7 +197,7 @@ export VAULT_ADDR='http://0.0.0.0:8200'
 
 ### Install Vault CLI tool
 
-You'll now need the vault CLI tool in your `PATH`, first download it:
+You'll now need to add the vault CLI tool in your `PATH`, first download it:
 
 ``` bash
 sudo dnf install wget unzip -y
@@ -248,7 +253,7 @@ Create a Key/Value secret:
 vault kv put secret/smoketest foo=bar
 ```
 
-And read it back:
+Read it back:
 
 ``` bash
 vault kv get secret/smoketest
@@ -277,7 +282,7 @@ Ref. https://www.vaultproject.io/docs/secrets/aws/index.html
 
 ### Python Client for Hashicorp Vault
 
-The next logical step is to understand how to work with vault via Python code. I've built a simple Django REST framework project helps test and prove interacting with Vault using the `hvac` package.  
+The next logical step is to understand how to work with vault via Python code. I've built a simple Django REST framework project that helps test and prove the interaction with Vault using the `hvac` package.  
 
 Ref. https://pypi.org/project/hvac/
 
@@ -325,7 +330,7 @@ Change directory into the Python project:
 cd ~/code/vaulttester
 ```
 
-And install the Python packages:
+Install the Python packages:
 
 ``` bash
 pip install -r requirements.txt
@@ -333,7 +338,7 @@ pip install -r requirements.txt
 
 ### Coding for S2I and OpenShift
 
-An essential aspect is to develop code that exploits environment variables, rather than including such values in `settings.py`, we set environment variables and retrieve them.
+An essential aspect is to develop code that exploits environment variables, rather than including such values in `settings.py`. We set environment variables and retrieve them.
 
 Look at this extract from my Python code:
 
@@ -351,7 +356,7 @@ Look at this extract from my Python code:
     VAULT_URL = get_env_value('VAULT_URL')
 ```
 
-It includes a function for retrieving values and kindly prompts you if not set. The application needs the `VAULT_TOKEN` to authenticate with Vault and the `VAULT_URL` to know where the Vault end-point lives.  
+It includes a function for retrieving values and prompts you if not set. The application needs the `VAULT_TOKEN` to authenticate with Vault and the `VAULT_URL` to know where the Vault end-point lives.  
 
 In the "development" environment, set them before running the local development python server:
 
@@ -382,7 +387,7 @@ curl http://localhost:8000/vault/kv/
 
 The second `view`, deals with testing the generation and retrieval of AWS credentials.
 
-The way this works is, we add a privileged AWS credential to Vault which is then used by the AWS secrets engine to generate AWS credentials based on predefined roles. 
+The way this works is that we add a privileged AWS credential to Vault, which is then used by the AWS secrets engine to generate AWS credentials based on predefined roles. 
 
 Working directly with Vault, make sure the AWS engine is enabled:
 
@@ -531,7 +536,7 @@ aws ec2 authorize-security-group-ingress --group-id sg-0961bf6b882a75b2d --proto
 
 With that in place, it's time to deploy my `vaulttester` on to OpenShift.
 
-Login to your OpenShift cluster, in this case, use `kubeadmin` (not recommended but for demonstration purposes and keeping this guide lean and focused):
+Login to your OpenShift cluster, in this case, use `kubeadmin` (not recommended, but for demonstration purposes and keeping this guide lean and focused):
 
 ``` bash
 oc login https://api.cluster.domain.com:6443
@@ -607,9 +612,9 @@ oc create -f vaulttester-template.yaml
 
 ### Kubernetes Auth Method
 
-Finally, let's deal with how OpenShift authenticates with Vault. So far, we've passed the `Root Token` as an environment variable, not ideal. 
+Finally, let's deal with how OpenShift authenticates with Vault. So far, we've passed the `Root Token` as an environment variable, which is not ideal. 
 
-A better method is possible using Vaults "Kubernetes Auth Method". The Kubernetes Auth Method enables Vault authentication using an OpenShift Service Account.
+A better method is to use Vaults "Kubernetes Auth Method". The Kubernetes Auth Method enables Vault authentication using an OpenShift Service Account.
 
 Ref. https://www.vaultproject.io/docs/auth/kubernetes/
 
@@ -713,7 +718,7 @@ path "aws/creds/ec2-role" {
   capabilities = ["read", "list"]
 }
 ```
-And write the policy
+Write the policy
 
 ```
 vault policy write -tls-skip-verify aws-example aws.hcl
