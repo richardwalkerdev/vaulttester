@@ -1,6 +1,8 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-import hvac, os, boto.ec2
+import hvac
+import os
+import boto.ec2
 from django.conf import settings
 import time
 
@@ -19,12 +21,12 @@ def kv(request):
     # Set environmant variable VAULT_TOKEN & VAULT_URL
     VAULT_TOKEN = get_env_value('VAULT_TOKEN')
     VAULT_URL = get_env_value('VAULT_URL')
-    
 
     # Check connection and authentication to vault server
     try:
         print("Trying to connect and authenticate.")
-        client = hvac.Client(url=os.environ['VAULT_URL'], token=os.environ['VAULT_TOKEN'])
+        client = hvac.Client(
+            url=os.environ['VAULT_URL'], token=os.environ['VAULT_TOKEN'])
         # Test authentication
         auth_bool = client.is_authenticated()
         print("Connected OK. Authenticated:", auth_bool)
@@ -32,7 +34,7 @@ def kv(request):
         print("Error: Failed to connect and/or authenticate.")
         return Response("Error: Failed to connect and/or authenticate.")
 
-    # Write a Key/Value under secret/test of foo/bar 
+    # Write a Key/Value under secret/test of foo/bar
     # Equivalnet of `vault kv put secret/test foo=bar`
     try:
         create_response = client.secrets.kv.v2.create_or_update_secret(
@@ -54,10 +56,11 @@ def kv(request):
         foo_value = read_response['data']['data']['foo']
     except:
         print("Error: Failed to read key value secret to vault.")
-        return Response("Error: Failed to read key value secret to vault.")    
+        return Response("Error: Failed to read key value secret to vault.")
 
     # Return JSON response
     return Response({"Authenticated": auth_bool, "foo": foo_value})
+
 
 @api_view(['GET'])
 def aws(request):
@@ -76,12 +79,12 @@ def aws(request):
     # Set environmant variable VAULT_TOKEN & VAULT_URL
     VAULT_TOKEN = get_env_value('VAULT_TOKEN')
     VAULT_URL = get_env_value('VAULT_URL')
-    
 
     # Check connection and authentication to vault server
     try:
         print("Trying to connect and authenticate.")
-        client = hvac.Client(url=os.environ['VAULT_URL'], token=os.environ['VAULT_TOKEN'])
+        client = hvac.Client(
+            url=os.environ['VAULT_URL'], token=os.environ['VAULT_TOKEN'])
         # Test authentication
         auth_bool = client.is_authenticated()
         print("Connected OK. Authenticated:", auth_bool)
@@ -99,15 +102,16 @@ def aws(request):
             secret=gen_creds_response['data']['secret_key'],
         ))
 
-        # Assign variables for API response 
+        # Assign variables for API response
         aws_gen_access_key_value = gen_creds_response['data']['access_key']
         aws_gen_secret_key = gen_creds_response['data']['secret_key']
- 
+
     except:
         print("Error: Failed to generate AWS credentials.")
-        return Response("Error: Failed to generate AWS credentials.")  
+        return Response("Error: Failed to generate AWS credentials.")
 
-    return Response({"Authenticated": auth_bool,"AWS_GEN_ACCESS_KEY": aws_gen_access_key_value,"AWS_GEN_SECRET_KEY": aws_gen_secret_key})
+    return Response({"Authenticated": auth_bool, "AWS_GEN_ACCESS_KEY": aws_gen_access_key_value, "AWS_GEN_SECRET_KEY": aws_gen_secret_key})
+
 
 @api_view(['GET'])
 def ec2(request):
@@ -122,11 +126,12 @@ def ec2(request):
     # Set environmant variable VAULT_TOKEN & VAULT_URL
     VAULT_TOKEN = get_env_value('VAULT_TOKEN')
     VAULT_URL = get_env_value('VAULT_URL')
-    
+
     # Check connection and authentication to vault server
     try:
         print("Trying to connect and authenticate.")
-        client = hvac.Client(url=os.environ['VAULT_URL'], token=os.environ['VAULT_TOKEN'])
+        client = hvac.Client(
+            url=os.environ['VAULT_URL'], token=os.environ['VAULT_TOKEN'])
         # Test authentication
         auth_bool = client.is_authenticated()
         print("Connected OK. Authenticated:", auth_bool)
@@ -144,12 +149,12 @@ def ec2(request):
             secret=gen_creds_response['data']['secret_key'],
         ))
 
-        # Assign variables for API response 
+        # Assign variables for API response
         aws_gen_access_key_value = gen_creds_response['data']['access_key']
         aws_gen_secret_key = gen_creds_response['data']['secret_key']
     except:
         print("Error: Failed to generate AWS credentials.")
-        return Response("Error: Failed to generate AWS credentials.")  
+        return Response("Error: Failed to generate AWS credentials.")
 
     # Need some time for the AWS credentials to propagate and be effective
     print("Waiting 30 seconds for credentials to propagate.")
@@ -159,23 +164,24 @@ def ec2(request):
     try:
         # Using the new credentails connect to AWS
         connection = boto.ec2.connect_to_region("eu-west-2",
-                     aws_access_key_id = aws_gen_access_key_value,
-                     aws_secret_access_key = aws_gen_secret_key)
- 
-        # Create an EC2 instance 
+                                                aws_access_key_id=aws_gen_access_key_value,
+                                                aws_secret_access_key=aws_gen_secret_key)
+
+        # Create an EC2 instance
         connection.run_instances('ami-0a0cb6c7bcb2e4c51',
-                                  key_name='vaultkey', 
-                                  instance_type='t2.micro',
-                                  security_groups=['default'])                          
+                                 key_name='vaultkey',
+                                 instance_type='t2.micro',
+                                 security_groups=['default'])
     except:
         print("Error: Failed to create EC2 instance.")
-        return Response("Error: Failed to create EC2 instance.")  
+        return Response("Error: Failed to create EC2 instance.")
 
     return Response({"Successful, check your AWS console for new instance."})
 
+
 @api_view(['GET'])
 def ocp(request):
-   
+
     def get_env_value(env_variable):
         try:
             return os.environ[env_variable]
@@ -216,12 +222,12 @@ def ocp(request):
             secret=gen_creds_response['data']['secret_key'],
         ))
 
-        # Assign variables for API response 
+        # Assign variables for API response
         aws_gen_access_key_value = gen_creds_response['data']['access_key']
         aws_gen_secret_key = gen_creds_response['data']['secret_key']
- 
+
     except:
         print("Error: Failed to generate AWS credentials.")
-        return Response("Error: Failed to generate AWS credentials.")  
+        return Response("Error: Failed to generate AWS credentials.")
 
-    return Response({"Authenticated": auth_bool,"AWS_GEN_ACCESS_KEY": aws_gen_access_key_value,"AWS_GEN_SECRET_KEY": aws_gen_secret_key})
+    return Response({"Authenticated": auth_bool, "AWS_GEN_ACCESS_KEY": aws_gen_access_key_value, "AWS_GEN_SECRET_KEY": aws_gen_secret_key})
